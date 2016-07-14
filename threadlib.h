@@ -28,7 +28,7 @@ void stop_main(void);
  */
 void delete_thread(void);
 
-
+void start_thread(void* sp);
 
 
 #endif

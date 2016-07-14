@@ -2,11 +2,11 @@
 #include <assert.h>
 #include "threadlib.h"
 
-#define TESTING         1 /* once you undestand the code 
+#define TESTING 1 /* once you undestand the code 
 			   * undefine this (just comment)
 			   */
 
-#undef TESTING
+//#undef TESTING
 			   
 #ifdef TESTING 
 /* few threads to play around with

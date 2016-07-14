@@ -19,6 +19,8 @@ struct tcb {
 	      * You can do something else as well. 
 	      */  
   /* you will need others stuff */ 
+  struct tcb *forword;
+  struct tcb *backword;     
 };
 
 typedef struct tcb tcb_t;
@@ -36,9 +38,45 @@ void machine_switch(tcb_t *newthread /* addr. of new TCB */,
 
 void switch_threads(tcb_t *newthread /* addr. of new TCB */, 
 		    tcb_t *oldthread /* addr. of old TCB */);
+
+
 		    
 
 /** Data structures and functions to support thread control box */ 
+
+void create_node(TCB* head, long int * stack){
+     tcb_t tem;
+     tem.sp = stack;
+     tem.backword = NULL;
+     tem.forword = NULL;
+     (*head) = &tem;
+     //printf("%p\n",*head);
+}
+
+void addNode(TCB* head, long int * stack){
+    if (*head != NULL){
+        tcb_t tem;
+        //printf("%p\n",*head);
+    while ((*head) -> forword != NULL){
+        (*head) = (*head) -> forword;
+    }
+    tem.sp = stack;
+    tem.backword = (*head);
+    tem.forword = NULL;
+
+    (*head) = &tem;
+
+
+    }else{
+      //printf("in\n");
+        create_node(head, stack);
+    }
+}
+
+// void deleteNode(){
+
+// }
+
 
 
 
@@ -51,6 +89,8 @@ void switch_threads(tcb_t *newthread /* addr. of new TCB */,
 void switch_threads(tcb_t *newthread /* addr. of new TCB */, tcb_t *oldthread /* addr. of old TCB */) {
 
   /* This is basically a front end to the low-level assembly code to switch. */
+
+  machine_switch(newthread, oldthread);
  
 	assert(!printf("Implement %s",__func__));
 
@@ -70,6 +110,8 @@ void switch_threads(tcb_t *newthread /* addr. of new TCB */, tcb_t *oldthread /*
 
 #include <stdlib.h>
 #include <assert.h>
+
+TCB head ;
 
 /*
  * allocate some space for thread stack.
@@ -102,6 +144,11 @@ int create_thread(void (*ip)(void)) {
    * most element in the stack should be return ip. So we create a stack with the address of the function 
    * we want to run at this slot. 
    */
+   //setting highest address as ip 
+   stack = stack + STACK_SIZE - 16*FRAME_REGS;
+   (*stack) = (long int)ip;
+
+   addNode(&head, stack);
 
 	return 0;
 }
@@ -109,6 +156,7 @@ int create_thread(void (*ip)(void)) {
 void yield(){
   /* thread wants to give up the CPUjust call the scheduler to pick the next thread. */
 
+  switch_threads(head -> backword, head);
 }
 
 
@@ -128,8 +176,12 @@ void stop_main(void)
   /* Main function was not created by our thread management system. 
    * So we have no record of it. So hijack it. 
    * Do not put it into our ready queue, switch to something else.*/
-
+  
+    	//printf("%p\n",head -> sp);
+	start_thread(head -> sp);
 	
-  assert(!printf("Implement %s",__func__));
+  assert(!printf("Implement %s ",__func__));
 
 }
+
+

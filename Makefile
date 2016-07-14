@@ -13,3 +13,4 @@ main: lib.o switch.o main.o
 
 clean:
 	rm -f *.o *~
+	rm main
