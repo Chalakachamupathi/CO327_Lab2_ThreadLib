@@ -26,6 +26,9 @@ struct tcb {
 typedef struct tcb tcb_t;
 typedef struct tcb *TCB;
 
+
+TCB head = NULL;
+
 /**
  * assembly code for switching 
  * @sp -- new stack to switch 
@@ -44,33 +47,28 @@ void switch_threads(tcb_t *newthread /* addr. of new TCB */,
 
 /** Data structures and functions to support thread control box */ 
 
-void create_node(TCB* head, long int * stack){
-     tcb_t tem;
-     tem.sp = stack;
-     tem.backword = NULL;
-     tem.forword = NULL;
-     (*head) = &tem;
-     //printf("%p\n",*head);
+void create_node(long int * stack){
+     TCB tem = malloc(sizeof(tcb_t));
+     tem -> sp = stack;
+     tem -> backword = tem;
+     tem -> forword = tem;
+     head = tem;
 }
 
-void addNode(TCB* head, long int * stack){
-    if (*head != NULL){
-        tcb_t tem;
-        //printf("%p\n",*head);
-    while ((*head) -> forword != NULL){
-        (*head) = (*head) -> forword;
+void addNode(long int * stack){
+    if (head == NULL){
+      	create_node(stack);
+      	return;
     }
-    tem.sp = stack;
-    tem.backword = (*head);
-    tem.forword = NULL;
 
-    (*head) = &tem;
-
-
-    }else{
-      //printf("in\n");
-        create_node(head, stack);
-    }
+    TCB tem = malloc(sizeof(tcb_t));
+    tcb_t* forwordtcb = head->forword;
+    head->forword = tem;
+    tem -> sp = stack;
+    tem -> backword = head;
+    tem -> forword = forwordtcb;
+    forwordtcb -> backword = tem;
+    return;
 }
 
 // void deleteNode(){
@@ -90,9 +88,9 @@ void switch_threads(tcb_t *newthread /* addr. of new TCB */, tcb_t *oldthread /*
 
   /* This is basically a front end to the low-level assembly code to switch. */
 
-  machine_switch(newthread, oldthread);
+  machine_switch(newthread , oldthread );
  
-	assert(!printf("Implement %s",__func__));
+	//assert(!printf("Implement %s",__func__));
 
 }
 
@@ -105,13 +103,13 @@ void switch_threads(tcb_t *newthread /* addr. of new TCB */, tcb_t *oldthread /*
  * also it needs to be aligned 
  */
 
-#define STACK_SIZE (sizeof(void *) * 1024)
+#define STACK_SIZE (sizeof(void *) * 512)
 #define FRAME_REGS 48 // is this correct for x86_64?
 
 #include <stdlib.h>
 #include <assert.h>
 
-TCB head ;
+
 
 /*
  * allocate some space for thread stack.
@@ -144,19 +142,24 @@ int create_thread(void (*ip)(void)) {
    * most element in the stack should be return ip. So we create a stack with the address of the function 
    * we want to run at this slot. 
    */
-   //setting highest address as ip 
-   stack = stack + STACK_SIZE - 16*FRAME_REGS;
+
+   //printf("first : %p\n",stack);
+   stack = stack + STACK_SIZE - sizeof(void *) *FRAME_REGS;
+   //printf("after : %p\n",stack);
    (*stack) = (long int)ip;
+	 stack = stack - 15;
+   // stack2 = stack2 + STACK_SIZE - 12*FRAME_REGS;
+   //  (*stack2) = (long int)ip;
 
-   addNode(&head, stack);
-
+   addNode(stack);
+   printf("in create : %p\n",stack);
 	return 0;
 }
 
 void yield(){
   /* thread wants to give up the CPUjust call the scheduler to pick the next thread. */
-
-  switch_threads(head -> backword, head);
+    head = head->backword;
+    switch_threads(head,(head->forword));
 }
 
 
@@ -176,9 +179,8 @@ void stop_main(void)
   /* Main function was not created by our thread management system. 
    * So we have no record of it. So hijack it. 
    * Do not put it into our ready queue, switch to something else.*/
-  
-    	//printf("%p\n",head -> sp);
-	start_thread(head -> sp);
+  printf("in stop main :%p\n",(head -> sp)+(sizeof(void *) *15));
+	start_thread((head -> sp)+(sizeof(void *) *15));
 	
   assert(!printf("Implement %s ",__func__));
 

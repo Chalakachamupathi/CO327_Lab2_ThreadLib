@@ -2,55 +2,55 @@
 #include <assert.h>
 #include "threadlib.h"
 
-#define TESTING 1 /* once you undestand the code 
-			   * undefine this (just comment)
-			   */
+// #define TESTING 1 /* once you undestand the code 
+// 			   * undefine this (just comment)
+// 			   */
 
-//#undef TESTING
+// //#undef TESTING
 			   
-#ifdef TESTING 
-/* few threads to play around with
- */
-void thread1(void);
-void thread2(void); 
+// #ifdef TESTING 
+// /* few threads to play around with
+//  */
+// void thread1(void);
+// void thread2(void); 
 
-void thread1(void)
-{
-  int i = 1;
-  for(;i<100;) {
-    printf("%s: count = %d\n",__func__,i++);
-    yield(); 
-  }
-  delete_thread();
-  assert(0);
-}
+// void thread1(void)
+// {
+//   int i = 1;
+//   for(;i<100;) {
+//     printf("%s: count = %d\n",__func__,i++);
+//     yield(); 
+//   }
+//   delete_thread();
+//   assert(0);
+// }
 
-void thread2(void)
-{
-  int i = -100;
-  for(;i<0;) {
-    printf("%s: count = %d\n",__func__,i++);
-    yield();
-  }
-  delete_thread();
-  assert(0);
-}
+// void thread2(void)
+// {
+//   int i = -100;
+//   for(;i<0;) {
+//     printf("%s: count = %d\n",__func__,i++);
+//     yield();
+//   }
+//   delete_thread();
+//   assert(0);
+// }
 
-int main(void)
-{ 
-  printf("Creating thread 1\n");
-  assert(!create_thread(thread2));
+// int main(void)
+// { 
+//   printf("Creating thread 1\n");
+//   assert(!create_thread(thread1));
 
-  printf("Creating thread 2\n");
-  assert(!create_thread(thread1));
+//   printf("Creating thread 2\n");
+//   assert(!create_thread(thread2));
 
-  stop_main(); /* give up the CPU */
-  assert(0); /* you should not come back */
+//   stop_main(); /* give up the CPU */
+//   assert(0); /* you should not come back */
 
-}
-#else /* real code
-       * this is what we'll test/mark
-       */
+// }
+// #else /* real code
+//        * this is what we'll test/mark
+//        */
 
 int count = 1;
 
@@ -98,4 +98,4 @@ int main(void)
   assert(0); /* you should not come back */
 
 }
-#endif
+//#endif
