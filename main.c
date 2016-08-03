@@ -54,7 +54,7 @@
 
 int count = 1;
 
-#define MAX 10 /* how may threads to create */
+#define MAX 34 /* how may threads to create */
 
 #define COUNT(x) x*100000
 
@@ -83,7 +83,7 @@ void simple_thread(void)
   assert(0); /* I should not be running */
 }
 
-#define NO_THREADS 10 /* FixMe: this should work for any number 
+#define NO_THREADS 34 /* FixMe: this should work for any number 
 		      * of threads
 		      */
 

@@ -1,13 +1,9 @@
 .text
 .global machine_switch
 .global start_thread
+.global delete_start
 
 machine_switch:
-	# address of the new sp is arg1
-	# address of the current tcb is arg2
-	# need to store all required registered for old tcb
-	# restore all required registred from the new tcb
-	# then when you return, you should get to the new thread 
 
 	push %rax
 	push %rbx
@@ -48,5 +44,31 @@ machine_switch:
 
 #for stop main
 start_thread:
+
 	mov %rdi, %rsp
+	
+	ret
+
+
+#for delete_start
+delete_start:
+
+	mov (%rdi), %rsp
+
+	pop %rsi
+	pop %r15
+	pop %r14
+	pop %r13
+	pop %r12
+	pop %r11
+	pop %r10
+	pop %r9
+	pop %r8
+	pop %rdi
+	pop %rbp
+	pop %rdx
+	pop %rcx
+	pop %rbx
+	pop %rax
+
 	ret

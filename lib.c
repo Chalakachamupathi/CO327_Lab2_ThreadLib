@@ -19,6 +19,11 @@ struct tcb {
 	      * You can do something else as well. 
 	      */  
   /* you will need others stuff */ 
+  /**
+  *save the memory address for the free function
+  **/      
+  void* initMemAddress;
+
   struct tcb *forword;
   struct tcb *backword;     
 };
@@ -47,17 +52,18 @@ void switch_threads(tcb_t *newthread /* addr. of new TCB */,
 
 /** Data structures and functions to support thread control box */ 
 
-void create_node(long int * stack){
+void create_node(long int * stack, long int* memAdd){
      TCB tem = malloc(sizeof(tcb_t));
      tem -> sp = stack;
+     tem -> initMemAddress = memAdd;
      tem -> backword = tem;
      tem -> forword = tem;
      head = tem;
 }
 
-void addNode(long int * stack){
+void addNode(long int * stack, long int* memAdd){
     if (head == NULL){
-      	create_node(stack);
+      	create_node(stack, memAdd);
       	return;
     }
 
@@ -65,20 +71,12 @@ void addNode(long int * stack){
     tcb_t* forwordtcb = head->forword;
     head->forword = tem;
     tem -> sp = stack;
+    tem ->initMemAddress = memAdd;
     tem -> backword = head;
     tem -> forword = forwordtcb;
     forwordtcb -> backword = tem;
     return;
 }
-
-// void deleteNode(){
-
-// }
-
-
-
-
-
 
 /** end of data structures */
 
@@ -103,13 +101,11 @@ void switch_threads(tcb_t *newthread /* addr. of new TCB */, tcb_t *oldthread /*
  * also it needs to be aligned 
  */
 
-#define STACK_SIZE (sizeof(void *) * 512)
+#define STACK_SIZE (sizeof(void *) * 400)
 #define FRAME_REGS 48 // is this correct for x86_64?
 
 #include <stdlib.h>
 #include <assert.h>
-
-
 
 /*
  * allocate some space for thread stack.
@@ -121,19 +117,18 @@ void * malloc_stack(void);
 
 void * malloc_stack() 
 {
-  /* allocate something aligned at 16
-   */
    void *ptr = malloc(STACK_SIZE + 16);
    if (!ptr) return NULL;
-   ptr = (void *)(((long int)ptr & (-1 << 4)) + 0x10);
    return ptr;
 }
 
 int create_thread(void (*ip)(void)) {
 	
 	long int  *stack; 
-	stack = malloc_stack();
-	if(!stack) return -1; /* no memory? */
+  long int  *initMemAddress; 
+  
+	initMemAddress = malloc_stack();
+	if(!initMemAddress) return -1; /* no memory? */
 
   /**
    * Stack layout: last slot should contain the return address and I should have some space 
@@ -142,17 +137,18 @@ int create_thread(void (*ip)(void)) {
    * most element in the stack should be return ip. So we create a stack with the address of the function 
    * we want to run at this slot. 
    */
-
-   //printf("first : %p\n",stack);
+   //aligned at 16
+   stack = (void *)(((long int)initMemAddress & (-1 << 4)) + 0x10);
+   /**
+   *Moving stack pointer to higer position and saving the sapce for Fram registres
+   *And set ip to thet
+   **/
    stack = stack + STACK_SIZE - sizeof(void *) *FRAME_REGS;
-   //printf("after : %p\n",stack);
    (*stack) = (long int)ip;
+   //save the space for 15 register that we are going to push
 	 stack = stack - 15;
-   // stack2 = stack2 + STACK_SIZE - 12*FRAME_REGS;
-   //  (*stack2) = (long int)ip;
 
-   addNode(stack);
-   printf("in create : %p\n",stack);
+   addNode(stack, initMemAddress);
 	return 0;
 }
 
@@ -168,6 +164,25 @@ void delete_thread(void){
   /* When a user-level thread calls this you should not 
    * let it run any more but let others run
    * make sure to exit when all user-level threads are dead */ 
+
+  if (head != head -> forword){
+
+      tcb_t* tem = head;
+      tcb_t* save1 = head -> forword;
+
+      head = head -> backword;
+
+      save1 -> backword = head;
+      head -> forword = save1;
+
+      free(tem -> initMemAddress);
+      free(tem);
+      delete_start(head);
+  }else{
+      free(head -> initMemAddress);
+      free(head);
+      exit(0);
+  }
   
 	   
   assert(!printf("Implement %s",__func__));
@@ -179,7 +194,6 @@ void stop_main(void)
   /* Main function was not created by our thread management system. 
    * So we have no record of it. So hijack it. 
    * Do not put it into our ready queue, switch to something else.*/
-  printf("in stop main :%p\n",(head -> sp)+(sizeof(void *) *15));
 	start_thread((head -> sp)+(sizeof(void *) *15));
 	
   assert(!printf("Implement %s ",__func__));
