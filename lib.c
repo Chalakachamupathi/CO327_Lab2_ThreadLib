@@ -101,7 +101,7 @@ void switch_threads(tcb_t *newthread /* addr. of new TCB */, tcb_t *oldthread /*
  * also it needs to be aligned 
  */
 
-#define STACK_SIZE (sizeof(void *) * 400)
+#define STACK_SIZE (sizeof(void *) * 1024)
 #define FRAME_REGS 48 // is this correct for x86_64?
 
 #include <stdlib.h>
@@ -124,7 +124,7 @@ void * malloc_stack()
 
 int create_thread(void (*ip)(void)) {
 	
-	long int  *stack; 
+	void  *stack; 
   long int  *initMemAddress; 
   
 	initMemAddress = malloc_stack();
@@ -143,12 +143,13 @@ int create_thread(void (*ip)(void)) {
    *Moving stack pointer to higer position and saving the sapce for Fram registres
    *And set ip to thet
    **/
-   stack = stack + STACK_SIZE - sizeof(void *) *FRAME_REGS;
-   (*stack) = (long int)ip;
-   //save the space for 15 register that we are going to push
-	 stack = stack - 15;
+   stack = stack + (STACK_SIZE - sizeof(void *) *FRAME_REGS);
 
-   addNode(stack, initMemAddress);
+   long int * tem = (long int *)stack;
+   (*tem) = (long int)ip;
+   //save the space for 15 register that we are going to push
+	 tem = tem - 15;
+   addNode(tem, initMemAddress);
 	return 0;
 }
 

@@ -54,7 +54,7 @@
 
 int count = 1;
 
-#define MAX 34 /* how may threads to create */
+#define MAX 100 /* how may threads to create */
 
 #define COUNT(x) x*100000
 
@@ -83,7 +83,7 @@ void simple_thread(void)
   assert(0); /* I should not be running */
 }
 
-#define NO_THREADS 34 /* FixMe: this should work for any number 
+#define NO_THREADS 100 /* FixMe: this should work for any number 
 		      * of threads
 		      */
 
@@ -91,8 +91,9 @@ int main(void)
 { 
 
   int i; 
-  for(i=0; i < NO_THREADS; i++) 
+  for(i=0; i < NO_THREADS; i++)
     assert(!create_thread(simple_thread));
+  
 
   stop_main(); /* give up the CPU */
   assert(0); /* you should not come back */
